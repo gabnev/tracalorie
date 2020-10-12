@@ -62,6 +62,24 @@ const ItemCtrl = (function() {
       });
       return found;
     },
+    updatedItem: function(name, calories) {
+      // turn calories to number
+      calories = parseInt(calories);
+
+      let found = null;
+
+      data.items.forEach((item) => {
+        // updates the DATA STRUCTURE
+        if(item.id === data.currentItem.id) {
+          item.name = name;
+          item.calories = calories;
+          found = item;
+        }
+      });
+      // return updated item
+      console.log('Item updated in DB');
+      return found;
+    },
     getTotalCalories: function() {
       let total = 0;
 
@@ -98,6 +116,7 @@ const UICtrl = (function() {
   const UISelectors = {
     // Manage our DOM selectors
     itemList: '#item-list',
+    itemsList: '#item-list li',
     addBtn: '.add-btn',
     updateBtn: '.update-btn',
     removeBtn: '.remove-btn',
@@ -147,6 +166,29 @@ const UICtrl = (function() {
       `;
       // Insert item
       document.querySelector(UISelectors.itemList).insertAdjacentElement('beforeend', li);
+    },
+    updateListItem: function(item) {
+      // Get the current node list
+      let listItems = document.querySelectorAll(UISelectors.itemsList);
+      console.log(listItems);
+
+      // Convert node list to array
+      listItems = Array.from(listItems);
+      console.log(listItems);
+
+      listItems.forEach((listItem) => {
+        const itemID = listItem.getAttribute('id');
+
+        // check IDs to find correct one
+        if(itemID === `item-${item.id}`) {
+          document.querySelector(`#${itemID}`).innerHTML = `
+          <strong>${item.name}: </strong> <em>${item.calories} Calories</em>
+          <a href="#" class="secondary-content">
+          <i class="edit-item fas fa-edit right"></i>
+          </a>
+          `;
+        }
+      });
     },
     clearInput: function() {
       document.querySelector(UISelectors.itemNameInput).value = '';
@@ -198,8 +240,20 @@ const App = (function(ItemCtrl, UICtrl) {
     // Add item event
     document.querySelector(UISelectors.addBtn).addEventListener('click', itemAddSubmit);
 
+    // Disable submit on enter
+    document.addEventListener('keypress', function(e) {
+       
+      if(e.key === 'Enter') {
+        e.preventDefault();
+        return false;
+      }
+    });
+
     // Edit icon click event
-    document.querySelector(UISelectors.itemList).addEventListener('click', itemUpdateSubmit);
+    document.querySelector(UISelectors.itemList).addEventListener('click', itemEditClick);
+
+    // Update item event
+    document.querySelector(UISelectors.updateBtn).addEventListener('click', itemUpdateSubmit);
   }
 
   // Add item submit
@@ -228,18 +282,16 @@ const App = (function(ItemCtrl, UICtrl) {
     e.preventDefault();
   }
 
-  // Update item submit
-  const itemUpdateSubmit = function(e) {
+  // Click Item Edit
+  const itemEditClick = function(e) {
 
     // Specify JS created class item
     if(e.target.classList.contains('edit-item')) {
       // Get list item id(item-0, item-1)
       const listId = e.target.parentNode.parentNode.id;
-      console.log(listId);
       
       // Break into an array
       const listIdArray = listId.split('-');
-      console.log(listIdArray);
 
       // Get actual ID
       const id = parseInt(listIdArray[1]);
@@ -256,10 +308,32 @@ const App = (function(ItemCtrl, UICtrl) {
 
     e.preventDefault();
   }
+
+  // Update item submit
+  const itemUpdateSubmit = function(e) {
+
+    // Get item input
+    const input = UICtrl.getItemInput();
+
+    // Update Item 
+    const updatedItem = ItemCtrl.updatedItem(input.name, input.calories);
+
+    // Update UI
+    UICtrl.updateListItem(updatedItem);
+
+    // Get total calories
+    const totalCalories = ItemCtrl.getTotalCalories();
+
+    // Add totalCalories to UI
+    UICtrl.showTotalCalories(totalCalories);
+
+    UICtrl.clearEditState();
+    
+    e.preventDefault();
+  }
   
   return {
     init: function() {
-      console.log('Initiating app . . .');
 
       // Set initial state
       UICtrl.clearEditState();
