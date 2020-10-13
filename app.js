@@ -9,7 +9,7 @@ const StorageCtrl = (function(){
       
       // check if any items in local storage
       if(localStorage.getItem('items') === null) {
-        items = []
+        items = [];
         
         // Push new item
         items.push(item);
@@ -39,6 +39,18 @@ const StorageCtrl = (function(){
       }
 
       return items;
+    },
+    updateItemStorage: function(updatedItem) {
+      let items = JSON.parse(localStorage.getItem('items'));
+
+      items.forEach((item, index) => {
+        if(updatedItem.id === item.id) {
+          items.splice(index, 1, updatedItem);
+        }
+      });
+
+      // Reset Local Storage
+      localStorage.setItem('items', JSON.stringify(items));
     }
   }
 })();
@@ -73,7 +85,7 @@ const ItemCtrl = (function() {
     getItems: function() {
       return data.items;
     },
-    addIem: function(name, calories) {
+    addItem: function(name, calories) {
       // Create ID
       let ID;
       if(data.items.length > 0) {
@@ -118,7 +130,6 @@ const ItemCtrl = (function() {
         }
       });
       // return updated item
-      console.log('Item updated in DB');
       return found;
     },
     deleteItem: function(id) {
@@ -188,7 +199,7 @@ const UICtrl = (function() {
       let html = '';
       items.forEach((item) => {
         html += `
-          <li class="collection-item" id="item-${this.id}">
+          <li class="collection-item" id="item-${item.id}">
             <strong>${item.name}: </strong> <em>${item.calories} Calories</em>
             <a href="#" class="secondary-content">
               <i class="edit-item fas fa-edit right"></i>
@@ -227,11 +238,9 @@ const UICtrl = (function() {
     updateListItem: function(item) {
       // Get the current node list
       let listItems = document.querySelectorAll(UISelectors.itemsList);
-      console.log(listItems);
 
       // Convert node list to array
       listItems = Array.from(listItems);
-      console.log(listItems);
 
       listItems.forEach((listItem) => {
         const itemID = listItem.getAttribute('id');
@@ -258,9 +267,9 @@ const UICtrl = (function() {
       document.querySelector(UISelectors.itemCaloriesInput).value = '';
     },
     addItemToForm: function() {
-      document.querySelector(UISelectors.itemNameInput). value = ItemCtrl.getCurrentItem().name;
-      document.querySelector(UISelectors.itemCaloriesInput). value = ItemCtrl.getCurrentItem().calories;
-      UICtrl.showEditState();      
+      document.querySelector(UISelectors.itemNameInput).value = ItemCtrl.getCurrentItem().name;
+      document.querySelector(UISelectors.itemCaloriesInput).value = ItemCtrl.getCurrentItem().calories;
+      UICtrl.showEditState();
     },
     hideList: function() {
       document.querySelector(UISelectors.itemList).style.display = 'none';
@@ -346,7 +355,7 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
     // Check for name and calorie input
     if(input.name !== '' && input.calories !== '') {
       // Add item
-      const newItem = ItemCtrl.addIem(input.name, input.calories);
+      const newItem = ItemCtrl.addItem(input.name, input.calories);
       
       // Add Item to UI List
       UICtrl.addListItem(newItem);
@@ -373,7 +382,7 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
     // Specify JS created class item
     if(e.target.classList.contains('edit-item')) {
       // Get list item id(item-0, item-1)
-      const listId = e.target.parentNode.parentNode.id;
+      const listId = e.target.parentNode.parentNode.id;      
       
       // Break into an array
       const listIdArray = listId.split('-');
@@ -386,7 +395,7 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
 
       // Current item
       ItemCtrl.setCurrentItem(itemToEdit);
-
+      
       // Add item to form
       UICtrl.addItemToForm();
     }
@@ -411,6 +420,9 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
 
     // Add totalCalories to UI
     UICtrl.showTotalCalories(totalCalories);
+
+    // Update local storage
+    StorageCtrl.updateItemStorage(updatedItem);
 
     UICtrl.clearEditState();
     
@@ -489,7 +501,7 @@ const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
     }
   }
   
-})(ItemCtrl, StorageCtrl, UICtrl); // evokes other controllers
+})(ItemCtrl, StorageCtrl, UICtrl); // invokes other controllers
 
 // Initialize App
 
