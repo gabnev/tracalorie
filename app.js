@@ -1,7 +1,47 @@
-// ******************
-// Storage controller
-// ******************
+// ******************************************
+//            STORAGE CONTROLLER
+// ******************************************
 
+const StorageCtrl = (function(){
+  return {
+    storeItem: function(item) {
+      let items;      
+      
+      // check if any items in local storage
+      if(localStorage.getItem('items') === null) {
+        items = []
+        
+        // Push new item
+        items.push(item);
+        
+        // set local storage
+        // local storage only holds STRINGS - to set use JSON.stringify()      
+        localStorage.setItem('items', JSON.stringify(items));
+      } else {
+        // to pull out of local storage as an object literal, turn it back with JSON.parse()
+        items = JSON.parse(localStorage.getItem('items'));
+
+        // Push new item
+        items.push(item);
+
+        // Re set local storage
+        localStorage.setItem('items', JSON.stringify(items));
+
+      }
+    },
+    getItemsFromStorage: function() {
+      let items;
+
+      if(localStorage.getItem('items') ===  null) {
+        items = [];
+      } else {
+        items = JSON.parse(localStorage.getItem('items'));
+      }
+
+      return items;
+    }
+  }
+})();
 
 // ******************************************
 //              ITEM CONTROLLER
@@ -18,12 +58,13 @@ const ItemCtrl = (function() {
 
   //data structure / state
   const data = {
-    items: [
-      // maybe experiment with fetch api here?
-      // {id: 0, name: 'Steak Dinner', calories: 1200},
-      // {id: 1, name: 'Cookie', calories: 400},
-      // {id: 2, name: 'Eggs', calories: 300},
-    ],
+    // items: [
+    //   maybe experiment with fetch api here?
+    //   {id: 0, name: 'Steak Dinner', calories: 1200},
+    //   {id: 1, name: 'Cookie', calories: 400},
+    //   {id: 2, name: 'Eggs', calories: 300},
+    // ],
+    items: StorageCtrl.getItemsFromStorage(),
     currentItem: null, //item selected to update in the form 
     totalCalories: 0
   }
@@ -263,7 +304,7 @@ const UICtrl = (function() {
 // ******************************************
 
 
-const App = (function(ItemCtrl, UICtrl) {
+const App = (function(ItemCtrl, StorageCtrl, UICtrl) {
   // load event listerners
   const loadEventListeners = function() {
     // Get UI selectors
@@ -315,6 +356,9 @@ const App = (function(ItemCtrl, UICtrl) {
 
       // Add totalCalories to UI
       UICtrl.showTotalCalories(totalCalories);
+
+      // Save to local storage
+      StorageCtrl.storeItem(newItem);
       
       // Clear field
       UICtrl.clearInput();
@@ -445,7 +489,7 @@ const App = (function(ItemCtrl, UICtrl) {
     }
   }
   
-})(ItemCtrl, UICtrl);
+})(ItemCtrl, StorageCtrl, UICtrl); // evokes other controllers
 
 // Initialize App
 
